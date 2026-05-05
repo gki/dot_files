@@ -1,0 +1,105 @@
+#!/usr/bin/env bash
+# push 前に gitleaks で、送る予定のコミット範囲に秘密情報が含まれていないか検査する。
+# 有効化: git config core.hooksPath .githooks
+# スキップ: GITLEAKS_PRE_PUSH_SKIP=1 git push
+# 失敗時も通す: GITLEAKS_PRE_PUSH_FAIL_OPEN=1 git push
+# 旧 CLI（detect）: GITLEAKS_USE_LEGACY_DETECT=1
+
+set -euo pipefail
+
+if [[ "${GITLEAKS_PRE_PUSH_SKIP:-}" == "1" ]]; then
+  exit 0
+fi
+
+if ! command -v gitleaks >/dev/null 2>&1; then
+  echo "pre-push: gitleaks が PATH にありません。brew install gitleaks などで入れるか、GITLEAKS_PRE_PUSH_SKIP=1 でスキップしてください。" >&2
+  if [[ "${GITLEAKS_PRE_PUSH_FAIL_OPEN:-}" == "1" ]]; then
+    exit 0
+  fi
+  exit 1
+fi
+
+zero=0000000000000000000000000000000000000000
+remote_name="${1:-}"
+# shellcheck disable=SC2034
+remote_url="${2:-}"
+
+repo_root=$(git rev-parse --show-toplevel)
+cd "$repo_root"
+
+collect_range() {
+  local local_ref="$1" local_sha="$2" remote_ref="$3" remote_sha="$4"
+  if [[ "$local_sha" == "$zero" ]]; then
+    echo ""
+    return
+  fi
+  if [[ "$remote_sha" != "$zero" ]]; then
+    echo "${remote_sha}..${local_sha}"
+    return
+  fi
+  local mb=""
+  if [[ -n "$remote_name" ]]; then
+    if git show-ref -q --verify "refs/remotes/${remote_name}/HEAD" 2>/dev/null; then
+      mb=$(git merge-base "$local_sha" "refs/remotes/${remote_name}/HEAD" 2>/dev/null || true)
+    fi
+    if [[ -z "$mb" ]] && git show-ref -q --verify "refs/remotes/${remote_name}/main" 2>/dev/null; then
+      mb=$(git merge-base "$local_sha" "refs/remotes/${remote_name}/main" 2>/dev/null || true)
+    fi
+    if [[ -z "$mb" ]] && git show-ref -q --verify "refs/remotes/${remote_name}/master" 2>/dev/null; then
+      mb=$(git merge-base "$local_sha" "refs/remotes/${remote_name}/master" 2>/dev/null || true)
+    fi
+  fi
+  if [[ -n "$mb" ]]; then
+    echo "${mb}..${local_sha}"
+    return
+  fi
+  echo "$local_sha"
+}
+
+run_gitleaks_for_range() {
+  local range=$1
+  # gitleaks README の git log 例: --log-opts="--all commitA..commitB"
+  local log_opts="--all ${range}"
+  if [[ -n "${GITLEAKS_PRE_PUSH_LOG_OPTS_APPEND:-}" ]]; then
+    log_opts+=" ${GITLEAKS_PRE_PUSH_LOG_OPTS_APPEND}"
+  fi
+
+  if [[ "${GITLEAKS_USE_LEGACY_DETECT:-}" == "1" ]]; then
+    gitleaks detect -v --redact --exit-code 1 --source "$repo_root" --log-opts="$log_opts"
+    return $?
+  fi
+
+  gitleaks git -v --redact --exit-code 1 --log-opts="$log_opts" "$repo_root"
+  return $?
+}
+
+while read -r local_ref local_sha remote_ref remote_sha; do
+  range=$(collect_range "$local_ref" "$local_sha" "$remote_ref" "$remote_sha")
+  [[ -z "$range" ]] && continue
+  if ! git rev-list "$range" 2>/dev/null | grep -q .; then
+    continue
+  fi
+
+  set +e
+  run_gitleaks_for_range "$range"
+  status=$?
+  set -e
+
+  case "$status" in
+    0) ;;
+    1)
+      echo "pre-push: gitleaks がシークレットの可能性を検出しました。除去するか、意図したものなら GITLEAKS_PRE_PUSH_SKIP=1 git push でスキップ（自己責任）。" >&2
+      exit 1
+      ;;
+    *)
+      echo "pre-push: gitleaks が異常終了しました（終了コード ${status}）。" >&2
+      if [[ "${GITLEAKS_PRE_PUSH_FAIL_OPEN:-}" == "1" ]]; then
+        echo "pre-push: GITLEAKS_PRE_PUSH_FAIL_OPEN=1 により push を許可します。" >&2
+        exit 0
+      fi
+      exit 1
+      ;;
+  esac
+done
+
+exit 0

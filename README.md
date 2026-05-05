@@ -25,6 +25,42 @@ JSON は **完全なユーザー設定のコピペではなく**、「よく使�
 
 リポジトリ直下の `.gitignore` で、`.env` や `.env.local` など **実値が入りがちな名前** を誤コミットしにくくしてあります（テンプレ用の `.env.example` は追跡対象に含められるように除外しています）。テンプレファイルは `something.env.example` のように **`.example` を付ける** と区別しやすいです。
 
+## Git pre-push（gitleaks）
+
+`git push` の直前に **[gitleaks](https://github.com/gitleaks/gitleaks)** を実行し、**今回送るコミット範囲**（`git log -p` に相当する差分）に API キー・トークン・秘密鍵などが含まれていないかを静的ルールで走査します。
+
+フック内では `gitleaks git`（v8.19 以降の推奨コマンド）を使い、`--log-opts` に `git log` 用の rev 範囲（公式 README の例どおり `--all` と組み合わせ）を渡しています。まだ `detect` しかない古い CLI の場合は `GITLEAKS_USE_LEGACY_DETECT=1` を指定してください。
+
+gitleaks の終了コードは **1 が「漏洩検出」と「エラー」の両方** に使われるため、ブロックされたらターミナルに出た gitleaks のログを確認してください。
+
+### インストール例（macOS）
+
+```bash
+brew install gitleaks
+```
+
+### 有効化（このリポジトリ内）
+
+リポジトリのルートで次を一度実行します（`.githooks` を Git のフックとして使う設定です）。
+
+```bash
+git config core.hooksPath .githooks
+```
+
+### 環境変数
+
+| 変数 | 意味 |
+|------|------|
+| `GITLEAKS_PRE_PUSH_SKIP=1` | pre-push での gitleaks を実行しない |
+| `GITLEAKS_PRE_PUSH_FAIL_OPEN=1` | gitleaks の終了コードが **0 でも 1 でもない** とき（実行エラーなど）だけ push を止めない |
+| `GITLEAKS_PRE_PUSH_LOG_OPTS_APPEND` | `git log` に追加で渡す引数（空白区切り）。既定は `--all <rev-range>` のみ |
+| `GITLEAKS_USE_LEGACY_DETECT=1` | `gitleaks detect --source …` を使う（非推奨コマンドだが環境に合わせる用途） |
+
+### 前提
+
+- `gitleaks` が `PATH` にあること。無い場合はフックが失敗し push はブロックされます。急ぎのときは `GITLEAKS_PRE_PUSH_SKIP=1 git push` を使います。
+- リポジトリ直下に [設定ファイル](https://github.com/gitleaks/gitleaks#configuration)（例: `.gitleaks.toml`）を置けば、ルールの調整や誤検知の除外ができます。
+
 ## ライセンス
 
 [MIT License](LICENSE)
