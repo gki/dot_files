@@ -49,3 +49,20 @@ brew install gitleaks  # macOS
 テンプレートファイルは必ず `something.env.example` のように **`.example` サフィックス** を付ける。これにより `.gitignore` の除外ルール（`.env` は無視、`.env.example` は追跡）が正しく機能する。
 
 実値（API キー・接続文字列など）はこのリポジトリに置かない。各プロジェクトの `.env`（Git 管理外）またはシークレット管理で扱う。
+
+## 利用可能スキル（PR / Git ワークフロー）
+
+Claude Code の Skill ツールで呼び出せるユーザースキル。
+
+| スキル | 用途 |
+|--------|------|
+| `dependabot-pr-review` | Dependabot PR のレビュー・マージ（バージョン変更リスク評価、ロックファイル競合解消） |
+| `pr-check-review-threads` | PR の未解決レビュースレッドを確認 |
+| `pr-request-rereview` | 指摘対応後に Copilot 等へ再レビューを依頼 |
+| `pr-resolve-review-thread` | レビューコメントに返信してスレッドを resolve |
+| `worktree-cleanup` | PR マージ後の git worktree とローカルブランチを削除 |
+
+**典型的な使用順**:
+1. PR 作成後 → `pr-check-review-threads`
+2. 指摘対応後 → `pr-resolve-review-thread` → `pr-request-rereview`
+3. マージ後 → `worktree-cleanup`
