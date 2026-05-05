@@ -1,0 +1,6 @@
+# 実値の入った環境変数ファイルを誤コミットしない
+.env
+.env.local
+.env.*.local
+!.env.example
+!**/.env.example
