@@ -54,6 +54,8 @@ timeout 600 {{LONG_BUILD_COMMAND}} 2>&1 | tail -200
 
 You block (via the OS `timeout(1)` coreutils command — not the Bash tool's own timeout), the TUI is treated as actively running a tool call, the harness keeps the session alive. Use this whenever the upper bound is known and ≤ the Bash tool's own timeout cap (default 2 min, max 10 min). The OS `timeout` wrapper bounds the child process so it dies if it overruns; the Bash tool's cap bounds the parent invocation. Both need to be respected — match `timeout 600` to a Bash tool call run with the explicit `timeout: 600000` parameter. Simplest, hardest to get wrong.
 
+> **macOS note**: BSD userland does not ship `timeout(1)`. Install via `brew install coreutils` (provides `gtimeout`, which you can alias as `timeout`), or skip the OS wrapper and rely on the Bash tool's `timeout: 600000` parameter alone. Without the OS wrapper the child can still overrun until the parent tool call is killed; with it, the child dies precisely at the deadline.
+
 ### B. Monitor on a streaming stdout — preferred for >10 min jobs that emit progress
 
 ```

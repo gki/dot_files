@@ -6,6 +6,8 @@ SKILL.md 内の `{{...}}` を、プロジェクトの実際の値に置き換え
 |--------------|--------------|-----|
 | `{{HUNG_PROCESS_PATTERN}}` | `ps` / `pkill` に渡す hung プロセス検出パターン | iOS: `xcodebuild\|xctest` (kill 時: `xcodebuild.*<UDID>`)<br>Node: `node.*jest`<br>Rust: `cargo test` |
 
+> **注**: 表セル内の `xcodebuild\|xctest` の `\` は Markdown 表のパイプエスケープです。コピーして `grep -iE` / `pkill -f` に渡す際は `\` を外し `xcodebuild|xctest` のように使ってください。
+
 `/tmp/wt-paneNN.id` の `NN` は worker 1 体ごとに割り当てる識別番号（issue / PR 番号など）です。
 
 ## 適用例: iOS / Xcode プロジェクトでの使い方

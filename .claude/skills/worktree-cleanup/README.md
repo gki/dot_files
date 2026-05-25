@@ -34,7 +34,10 @@ done
 ### 特定 worktree に紐づく DerivedData だけクリア
 
 ```bash
-TARGET_WS="$WORKTREE/Timer.xcworkspace"   # WORKTREE と xcworkspace 名は事前確定
+# 前提: 削除対象の worktree path と xcworkspace 名を事前に確定 (SKILL.md の WORKTREE_PATH 命名と一致)
+WORKTREE_PATH=/path/to/myproject/.worktrees/feature-NN
+XCWS_NAME=App
+TARGET_WS="$WORKTREE_PATH/$XCWS_NAME.xcworkspace"
 for dir in ~/Library/Developer/Xcode/DerivedData/*/; do
   ws=$(/usr/libexec/PlistBuddy -c 'Print :WorkspacePath' "$dir/info.plist" 2>/dev/null)
   if [ "$ws" = "$TARGET_WS" ]; then
@@ -47,22 +50,22 @@ done
 ### iOS 一括実行サンプル
 
 ```bash
-MAIN=/path/to/myproject
-WORKTREE=/path/to/myproject/.worktrees/feature-55
+MAIN_REPO_PATH=/path/to/myproject
+WORKTREE_PATH=/path/to/myproject/.worktrees/feature-55
 BRANCH=feature/my-feature-55
-XCWS_NAME=App   # → $WORKTREE/App.xcworkspace
+XCWS_NAME=App   # → $WORKTREE_PATH/App.xcworkspace
 
 # 1. uncommitted 変更 / untracked file の確認（supervisor が置いた .worker-prompt.md 等で --force が要る場合あり）
-git -C "$WORKTREE" status --short
+git -C "$WORKTREE_PATH" status --short
 
 # 2. worktree 削除（必要なら --force）
-git -C "$MAIN" worktree remove "$WORKTREE" || git -C "$MAIN" worktree remove --force "$WORKTREE"
+git -C "$MAIN_REPO_PATH" worktree remove "$WORKTREE_PATH" || git -C "$MAIN_REPO_PATH" worktree remove --force "$WORKTREE_PATH"
 
 # 3. ブランチ削除（squash merge は -D）
-git -C "$MAIN" branch -D "$BRANCH"
+git -C "$MAIN_REPO_PATH" branch -D "$BRANCH"
 
 # 4. 紐づく DerivedData だけ削除
-TARGET_WS="$WORKTREE/$XCWS_NAME.xcworkspace"
+TARGET_WS="$WORKTREE_PATH/$XCWS_NAME.xcworkspace"
 for dir in ~/Library/Developer/Xcode/DerivedData/*/; do
   ws=$(/usr/libexec/PlistBuddy -c 'Print :WorkspacePath' "$dir/info.plist" 2>/dev/null)
   if [ "$ws" = "$TARGET_WS" ]; then
@@ -72,8 +75,8 @@ for dir in ~/Library/Developer/Xcode/DerivedData/*/; do
 done
 
 # 5. 完了確認
-git -C "$MAIN" worktree list
-git -C "$MAIN" branch
+git -C "$MAIN_REPO_PATH" worktree list
+git -C "$MAIN_REPO_PATH" branch
 ```
 
 ### 補足

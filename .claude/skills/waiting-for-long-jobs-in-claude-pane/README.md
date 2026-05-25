@@ -8,6 +8,8 @@ SKILL.md 内の `{{...}}` を、プロジェクトの実際の値に置き換え
 | `{{PROGRESS_PATTERN}}` | Monitor の grep に渡す進捗行パターン | iOS: `Test Case` / Node: `PASS\|FAIL` / Rust: `test result` |
 | `{{PR_NUM}}` | `gh pr checks` に渡す PR 番号 | `96` |
 
+> **注**: 表セル内の `PASS\|FAIL` の `\` は Markdown 表のパイプエスケープです。コピーして `grep -E` に渡す際は `\` を外し `grep -E "PASS|FAIL"` のように使ってください。
+
 ## 適用例: iOS / Xcode プロジェクトでの使い方
 
 ### Pattern A（10 分以内に終わる単体ビルド）

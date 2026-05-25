@@ -52,11 +52,19 @@ worker 自己申告は**ヒント**として扱い、supervisor は同じ skill 
 ### 1. PR 状態を 1 コマンドで取る
 
 ```bash
+# REPO は owner/repo 形式 (例: gki/dot_files)。$PR は PR 番号。
 gh pr view $PR -R $REPO --json statusCheckRollup,mergeable,headRefOid,reviewRequests,reviews \
   --jq '{mergeable, head:.headRefOid[0:7], ci:(.statusCheckRollup//[]|map({n:.name, c:(.conclusion//.status)}))}'
 
-gh api graphql -f query='{repository(owner:"'"$OWNER"'",name:"'"$REPO_NAME"'"){pullRequest(number:'"$PR"'){
-  reviewThreads(last:50){nodes{isResolved}}}}}' \
+# GraphQL は owner/name を分解して -F field 引数で渡す (-f は string 固定で interpolation できない)
+gh api graphql \
+  -F owner="${REPO%/*}" -F name="${REPO#*/}" -F pr="$PR" \
+  -f query='
+    query($owner:String!, $name:String!, $pr:Int!) {
+      repository(owner:$owner, name:$name) {
+        pullRequest(number:$pr) { reviewThreads(last:50){nodes{isResolved}} }
+      }
+    }' \
   | python3 -c "import json,sys; d=json.load(sys.stdin); ts=d['data']['repository']['pullRequest']['reviewThreads']['nodes']; un=[t for t in ts if not t['isResolved']]; print(f'total={len(ts)} unresolved={len(un)}')"
 ```
 
