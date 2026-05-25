@@ -79,6 +79,7 @@ git -C MAIN_REPO_PATH branch -d BRANCH_NAME
 
 - `-d` はマージ済みブランチのみ削除（安全）
 - `-D` は強制削除。マージ済み確認済みの場合のみ使用
+- **squash merge / rebase merge は `-d` で「マージ済み」と判定されない** → PR の `state: "MERGED"` を Step 2 で確認済みなら `-D` を使う
 
 ### Step 6: 完了確認
 
