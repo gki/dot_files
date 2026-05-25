@@ -52,7 +52,7 @@ Pick by how the underlying command behaves.
 timeout 600 {{LONG_BUILD_COMMAND}} 2>&1 | tail -200
 ```
 
-You block, the TUI is treated as actively running a tool call, the harness keeps the session alive. Use this whenever the upper bound is known and ≤ the tool's timeout (default 2 min, max 10 min via `timeout`). Simplest, hardest to get wrong.
+You block (via the OS `timeout(1)` coreutils command — not the Bash tool's own timeout), the TUI is treated as actively running a tool call, the harness keeps the session alive. Use this whenever the upper bound is known and ≤ the Bash tool's own timeout cap (default 2 min, max 10 min). The OS `timeout` wrapper bounds the child process so it dies if it overruns; the Bash tool's cap bounds the parent invocation. Both need to be respected — match `timeout 600` to a Bash tool call run with the explicit `timeout: 600000` parameter. Simplest, hardest to get wrong.
 
 ### B. Monitor on a streaming stdout — preferred for >10 min jobs that emit progress
 

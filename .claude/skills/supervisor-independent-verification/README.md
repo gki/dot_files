@@ -29,12 +29,12 @@ screenshot-fidelity-check の 2/2b/2c/2d/2e（getbbox 残差・罫線ズレ・�
 
 ## 前提
 
-- `screenshot-fidelity-check` skill が同 repo に導入されている
+- `screenshot-fidelity-check` skill が利用可能（**本 repo には未同梱**。user scope `~/.claude/skills/` 等で別途導入しておく）
 - `gh` と `git` でブランチを fetch 可能
 - `SendUserFile` + `AskUserQuestion` で前後画像とマージ判断を同ターンで提示できる環境
 
 ## 関連スキル
 
-- `screenshot-fidelity-check` — 視覚検証の本体
+- `screenshot-fidelity-check` — 視覚検証の本体（本 repo 未同梱、別途用意）
 - `supervising-worker-panes` — worker の「完了」申告をトリガに本 skill を起動
 - `sending-keys-to-claude-tui` — 完了未達なら worker に追加コミット依頼を返す

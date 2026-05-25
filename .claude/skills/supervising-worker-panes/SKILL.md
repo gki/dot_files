@@ -118,7 +118,7 @@ worker が「コードだけ完成」で止まらないよう、**完了条件�
 
 ### スクリーンショットの視覚検証は [[screenshot-fidelity-check]] に一本化
 
-UI のスクショ一致確認（純粋リファクタ 0px / 移行の累積ズレ検証）は **skill [[screenshot-fidelity-check]] の手順を使う**。supervisor はマージ前に同 skill を独立再実行し、worker の自己申告を鵜呑みにしない。worker prompt にも同 skill の実行を完了ゲートとして明記させる（worker と supervisor が同一の検証を使う）。**目視判定 厳禁・数値のみ**が原則。
+UI のスクショ一致確認（純粋リファクタ 0px / 移行の累積ズレ検証）は **skill [[screenshot-fidelity-check]] の手順を使う**（本 repo 未同梱なので別途 user scope 等で導入する前提）。supervisor はマージ前に同 skill を独立再実行し、worker の自己申告を鵜呑みにしない。worker prompt にも同 skill の実行を完了ゲートとして明記させる（worker と supervisor が同一の検証を使う）。**目視判定 厳禁・数値のみ**が原則。
 
 ### 人間にマージ可否を確認するとき
 

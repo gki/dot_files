@@ -47,10 +47,10 @@ done
 ### iOS 一括実行サンプル
 
 ```bash
-MAIN=/Users/gen/Development/workoutimer
-WORKTREE=/Users/gen/Development/wt-55
-BRANCH=feature/swiftui-sound-vibration-setting-55
-XCWS_NAME=Timer   # → $WORKTREE/Timer.xcworkspace
+MAIN=/path/to/myproject
+WORKTREE=/path/to/myproject/.worktrees/feature-55
+BRANCH=feature/my-feature-55
+XCWS_NAME=App   # → $WORKTREE/App.xcworkspace
 
 # 1. uncommitted 変更 / untracked file の確認（supervisor が置いた .worker-prompt.md 等で --force が要る場合あり）
 git -C "$WORKTREE" status --short

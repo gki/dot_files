@@ -19,8 +19,8 @@ worker が「完了 / マージ準備完了」と申告した PR について、
 **worker のローカル状態を一切信用せず**、git に push 済の成果物だけで再検証して
 ユーザーにマージ判断を仰ぐまでの不可分手順。
 
-関連: [[screenshot-fidelity-check]] / [[sending-keys-to-claude-tui]] /
-[[supervising-worker-panes]]
+関連: [[screenshot-fidelity-check]] (本 repo 未同梱。別途 user scope 等で導入する前提) /
+[[sending-keys-to-claude-tui]] / [[supervising-worker-panes]]
 
 ## なぜ独立検証が要るか
 
@@ -55,7 +55,7 @@ worker 自己申告は**ヒント**として扱い、supervisor は同じ skill 
 gh pr view $PR -R $REPO --json statusCheckRollup,mergeable,headRefOid,reviewRequests,reviews \
   --jq '{mergeable, head:.headRefOid[0:7], ci:(.statusCheckRollup//[]|map({n:.name, c:(.conclusion//.status)}))}'
 
-gh api graphql -f query='{repository(owner:"OWNER",name:"REPO"){pullRequest(number:'"$PR"'){
+gh api graphql -f query='{repository(owner:"'"$OWNER"'",name:"'"$REPO_NAME"'"){pullRequest(number:'"$PR"'){
   reviewThreads(last:50){nodes{isResolved}}}}}' \
   | python3 -c "import json,sys; d=json.load(sys.stdin); ts=d['data']['repository']['pullRequest']['reviewThreads']['nodes']; un=[t for t in ts if not t['isResolved']]; print(f'total={len(ts)} unresolved={len(un)}')"
 ```

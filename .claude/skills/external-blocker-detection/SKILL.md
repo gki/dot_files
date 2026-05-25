@@ -21,8 +21,7 @@ CI/ビルド/ツールの失敗が **コード由来でなく外部要因（課�
 エスカレーションする手順。
 
 関連: [[supervising-worker-panes]] / [[supervisor-independent-verification]] /
-[[sending-keys-to-claude-tui]] / 既存 memory `project_ci_strict_concurrency`
-（こちらは「コード由来の既知パターン」で本 skill とは対照的）
+[[sending-keys-to-claude-tui]]
 
 ## なぜ skill 化するか
 
