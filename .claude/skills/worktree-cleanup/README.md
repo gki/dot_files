@@ -52,7 +52,7 @@ done
 ```bash
 MAIN_REPO_PATH=/path/to/myproject
 WORKTREE_PATH=/path/to/myproject/.worktrees/feature-55
-BRANCH=feature/my-feature-55
+BRANCH_NAME=feature/my-feature-55
 XCWS_NAME=App   # → $WORKTREE_PATH/App.xcworkspace
 
 # 1. uncommitted 変更 / untracked file の確認（supervisor が置いた .worker-prompt.md 等で --force が要る場合あり）
@@ -62,7 +62,7 @@ git -C "$WORKTREE_PATH" status --short
 git -C "$MAIN_REPO_PATH" worktree remove "$WORKTREE_PATH" || git -C "$MAIN_REPO_PATH" worktree remove --force "$WORKTREE_PATH"
 
 # 3. ブランチ削除（squash merge は -D）
-git -C "$MAIN_REPO_PATH" branch -D "$BRANCH"
+git -C "$MAIN_REPO_PATH" branch -D "$BRANCH_NAME"
 
 # 4. 紐づく DerivedData だけ削除
 TARGET_WS="$WORKTREE_PATH/$XCWS_NAME.xcworkspace"

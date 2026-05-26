@@ -53,7 +53,7 @@ worker 自己申告は**ヒント**として扱い、supervisor は同じ skill 
 
 ```bash
 # REPO は owner/repo 形式 (例: gki/dot_files)。$PR は PR 番号。
-gh pr view $PR -R $REPO --json statusCheckRollup,mergeable,headRefOid,reviewRequests,reviews \
+gh pr view "$PR" -R "$REPO" --json statusCheckRollup,mergeable,headRefOid,reviewRequests,reviews \
   --jq '{mergeable, head:.headRefOid[0:7], ci:(.statusCheckRollup//[]|map({n:.name, c:(.conclusion//.status)}))}'
 
 # GraphQL は owner/name を分解して -F field 引数で渡す (-f は string 固定で interpolation できない)。
@@ -111,7 +111,7 @@ worker が報告した軸だけ追試するのではなく、追加軸（特に 
 ### 4. 実装 diff の構造確認（④⑤⑥）
 
 ```bash
-gh pr view $PR -R $REPO --json files --jq '.files[] | "\(.additions)+\(.deletions)- \(.path)"'
+gh pr view "$PR" -R "$REPO" --json files --jq '.files[] | "\(.additions)+\(.deletions)- \(.path)"'
 ```
 
 確認ポイント:

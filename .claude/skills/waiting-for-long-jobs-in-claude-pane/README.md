@@ -35,7 +35,11 @@ Monitor(
 ### Pattern C（PR の CI 待ち）
 
 ```bash
-until gh pr checks 96 --json bucket --jq 'all(.[]; .bucket!="pending")' >/dev/null; do sleep 30; done
+# jq の stdout ("true"/"false") で判定する。gh pr checks は pending 中も exit 0 を返すため
+# `>/dev/null` 形式だと初回ループで即終了してしまう。
+until [ "$(gh pr checks 96 --json bucket --jq 'all(.[]; .bucket!="pending")')" = "true" ]; do
+  sleep 30
+done
 ```
 
 ## 補足

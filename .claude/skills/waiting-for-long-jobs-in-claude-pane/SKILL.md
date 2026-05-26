@@ -71,7 +71,12 @@ Each matching line becomes a `<task-notification>`. Your TUI receives events at 
 ### C. `until`-loop polling — for binary state changes (file exists, status flips)
 
 ```bash
-until gh pr checks {{PR_NUM}} --json bucket --jq 'all(.[]; .bucket!="pending")' >/dev/null; do sleep 30; done
+# Test on jq's stdout ("true"/"false"), NOT on the command exit status.
+# `gh pr checks` returns exit 0 even while runs are still pending, which would
+# make a `>/dev/null` form exit the loop on the very first iteration.
+until [ "$(gh pr checks {{PR_NUM}} --json bucket --jq 'all(.[]; .bucket!="pending")')" = "true" ]; do
+  sleep 30
+done
 ```
 
 Block in foreground, polling at a sensible interval. Same liveness story as Pattern A.
