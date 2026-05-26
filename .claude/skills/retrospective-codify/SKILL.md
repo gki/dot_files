@@ -29,19 +29,19 @@ description: タスク完了時に「最初に失敗した内容」と「最終�
 
    検索キー候補は気付きから 2 〜 3 語抽出する（ツール名・API 名・症状語・対義語）。例: 気付きが「pnpm v10 を使う」なら `pnpm`, `packageManager`, `lockfile`。
 
-   照合先と最低限の検索:
+   照合先と最低限の検索（Claude Code 内なら `Grep` ツール、シェル直接実行なら `grep -R` を使う。下記は agent 向けの疑似コード表記で、`Grep` は Claude tool を意図している。シェルでコピペ実行する場合は `grep -R`／`rg` に読み替える）:
    ```
    # skill 重複（global）
    ls ~/.claude/skills/
-   Grep "<キー>" ~/.claude/skills/*/SKILL.md
+   Grep "<キー>" ~/.claude/skills/*/SKILL.md          # shell では: grep -R "<キー>" ~/.claude/skills/
 
    # CLAUDE.md 重複
-   Grep "<キー>" ~/.claude/CLAUDE.md
-   Grep "<キー>" <project-root>/CLAUDE.md   # 該当プロジェクトがある場合
+   Grep "<キー>" ~/.claude/CLAUDE.md                  # shell では: grep "<キー>" ~/.claude/CLAUDE.md
+   Grep "<キー>" <project-root>/CLAUDE.md             # shell では: grep "<キー>" <project-root>/CLAUDE.md
 
    # lint ルール重複
    ls <project-root>/rules/
-   Grep "<キー>" <project-root>/rules/
+   Grep "<キー>" <project-root>/rules/                # shell では: grep -R "<キー>" <project-root>/rules/
    ```
 
    結果を 4 段階に分類:
