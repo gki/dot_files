@@ -90,7 +90,7 @@ digraph classify {
 ## 出力テンプレート
 
 ### ast-grep ルール
-`ast-grep-practice` skill を参照。`rules/` ディレクトリに YAML を追加し、`rule-tests/` に valid / invalid ペアを必ず書く。
+`ast-grep-practice` skill (本 repo 未同梱、別途 user scope 等で導入する前提) を参照。`rules/` ディレクトリに YAML を追加し、`rule-tests/` に valid / invalid ペアを必ず書く。
 
 ### CLAUDE.md への追記
 ```markdown
@@ -247,5 +247,5 @@ message: Set/Map のサイズは .size プロパティを使う。
 ## 関連 skill
 
 - `superpowers:writing-skills` — 新規 skill を書くときのテンプレと TDD フロー
-- `ast-grep-practice` — lint ルール化する場合の書き方とテスト
-- `update-config` — settings.json / permissions の変更が必要な場合
+- `ast-grep-practice` — lint ルール化する場合の書き方とテスト (本 repo 未同梱、別途導入)
+- `update-config` — settings.json / permissions の変更が必要な場合 (本 repo 未同梱、別途導入)

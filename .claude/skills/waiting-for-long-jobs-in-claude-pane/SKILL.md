@@ -99,4 +99,4 @@ Block in foreground, polling at a sensible interval. Same liveness story as Patt
 
 ## If You're Already Dead
 
-If a supervisor wakes you with "your previous session exited and your background job was killed," do not assume the job's results are recoverable. Re-run the verification step from scratch using Pattern A or B. See `sending-keys-to-claude-tui` for the supervisor side of dead-TUI detection and `claude --resume` recovery.
+If a supervisor wakes you with "your previous session exited and your background job was killed," do not assume the job's results are recoverable. Re-run the verification step from scratch using Pattern A or B. See [[sending-keys-to-claude-tui]] for the supervisor side of dead-TUI detection and `claude --resume` recovery.

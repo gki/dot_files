@@ -13,10 +13,10 @@ SKILL.md はタスク完了時の学びを ast-grep ルール / skill / CLAUDE.m
 ## 前提
 
 - 重複チェック用に `~/.claude/skills/`, `~/.claude/CLAUDE.md`, プロジェクトの `rules/` などを Grep できる
-- ast-grep ルールに落とせる場合は `ast-grep-practice` skill を併用
+- ast-grep ルールに落とせる場合は `ast-grep-practice` skill を併用（**本 repo 未同梱、別途 user scope 等で導入する前提**）
 - ユーザー承認なしに CLAUDE.md / skill を更新しないこと（必ず提案 → 承認 → 書き出し）
 
 ## 関連スキル
 
 - `empirical-prompt-tuning` — プロンプト開発中の評価ループ（事前）
-- `ast-grep-practice` — lint ルール化する場合の書き方とテスト
+- `ast-grep-practice` — lint ルール化する場合の書き方とテスト（本 repo 未同梱、別途導入）

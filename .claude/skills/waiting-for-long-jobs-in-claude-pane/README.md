@@ -48,6 +48,8 @@ done
 - `timeout` 値はジョブの最長想定 + 10% を目安に。短すぎると本物の hung と区別がつかない
 - 自分が worker か supervisor か迷ったら worker discipline に倒す（strictly safer）
 
+> **macOS 注**: 上の Pattern A の `timeout 600 xcodebuild ...` は OS の `timeout(1)` 前提だが、macOS の BSD userland にはデフォルトで `timeout` は入っていない。`brew install coreutils` で `gtimeout` を入れて `alias timeout=gtimeout` する、または OS wrapper を諦めて `Bash(timeout: 600000)` パラメータ単独に頼る（SKILL.md の macOS note と同じトレードオフ）。
+
 ## 関連スキル
 
 - `sending-keys-to-claude-tui` — TUI 死亡時の `claude --resume` 復旧
