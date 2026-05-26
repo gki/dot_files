@@ -152,11 +152,17 @@ AskUserQuestion {
 ユーザーが squash merge 承認したら以下を一括実行:
 
 ```bash
+# 事前に対象 worktree のパスを確定する (固定パターン埋め込みで誤削除しないため)。
+# 例: branch 名から worktree list で逆引きする (worktree 命名規約はプロジェクト依存)。
+WORKTREE_PATH=$(git -C "$REPO_DIR" worktree list --porcelain \
+  | awk -v b="refs/heads/$BRANCH" '/^worktree / {p=$2} $0=="branch "b {print p; exit}')
+[ -n "$WORKTREE_PATH" ] || { echo "worktree for $BRANCH not found — abort cleanup"; exit 1; }
+
 gh pr merge "$PR" -R "$REPO" --squash --delete-branch
 git -C "$REPO_DIR" fetch origin main                        # main HEAD 確認
 tmux kill-pane -t "$WORKER_PANE"                            # worker pane 撤去
-git -C "$REPO_DIR" worktree remove --force "/path/to/wt-$PR" # worktree 撤去
-rm "/tmp/wt-pane$PR.id"                                     # pane id ファイル
+git -C "$REPO_DIR" worktree remove --force "$WORKTREE_PATH" # worktree 撤去 (確定パス)
+rm -f "/tmp/wt-pane$PR.id"                                  # pane id ファイル (再実行耐性)
 # 単一 worker 監視 cron なら CronDelete でも削除
 ```
 

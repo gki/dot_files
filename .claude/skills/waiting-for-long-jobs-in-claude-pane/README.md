@@ -4,7 +4,7 @@ SKILL.md 内の `{{...}}` を、プロジェクトの実際の値に置き換え
 
 | プレースホルダ | 置き換える内容 | 例 |
 |--------------|--------------|-----|
-| `{{LONG_BUILD_COMMAND}}` | 長時間ジョブの実コマンド | iOS: `xcodebuild test -workspace App.xcworkspace -scheme AppTests -destination 'platform=iOS Simulator,id=<UDID>'`<br>Node: `pnpm test --runInBand`<br>Rust: `cargo test --release` |
+| `{{LONG_BUILD_COMMAND}}` | 長時間ジョブの実コマンド | iOS: `xcodebuild test -workspace App.xcworkspace -scheme AppTests -destination 'platform=iOS Simulator,id=<UDID>'`<br>Node: `pnpm test -- --runInBand` (pnpm では script への引数は `--` 区切り)<br>Rust: `cargo test --release` |
 | `{{PROGRESS_PATTERN}}` | Monitor の grep に渡す進捗行パターン | iOS: `Test Case` / Node: `PASS\|FAIL` / Rust: `test result` |
 | `{{PR_NUM}}` | `gh pr checks` に渡す PR 番号 | `96` |
 
