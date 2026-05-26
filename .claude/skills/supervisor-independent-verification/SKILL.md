@@ -56,20 +56,28 @@ worker 自己申告は**ヒント**として扱い、supervisor は同じ skill 
 gh pr view $PR -R $REPO --json statusCheckRollup,mergeable,headRefOid,reviewRequests,reviews \
   --jq '{mergeable, head:.headRefOid[0:7], ci:(.statusCheckRollup//[]|map({n:.name, c:(.conclusion//.status)}))}'
 
-# GraphQL は owner/name を分解して -F field 引数で渡す (-f は string 固定で interpolation できない)
+# GraphQL は owner/name を分解して -F field 引数で渡す (-f は string 固定で interpolation できない)。
+# first:100 + pageInfo.hasNextPage で取りこぼし検出。100 スレッド超は paging 必須。
 gh api graphql \
   -F owner="${REPO%/*}" -F name="${REPO#*/}" -F pr="$PR" \
   -f query='
     query($owner:String!, $name:String!, $pr:Int!) {
       repository(owner:$owner, name:$name) {
-        pullRequest(number:$pr) { reviewThreads(last:50){nodes{isResolved}} }
+        pullRequest(number:$pr) {
+          reviewThreads(first:100) {
+            nodes{isResolved}
+            pageInfo{hasNextPage endCursor}
+          }
+        }
       }
     }' \
-  | python3 -c "import json,sys; d=json.load(sys.stdin); ts=d['data']['repository']['pullRequest']['reviewThreads']['nodes']; un=[t for t in ts if not t['isResolved']]; print(f'total={len(ts)} unresolved={len(un)}')"
+  | python3 -c "import json,sys; d=json.load(sys.stdin); rt=d['data']['repository']['pullRequest']['reviewThreads']; ts=rt['nodes']; un=[t for t in ts if not t['isResolved']]; warn=' WARNING: >100 threads — needs paging via endCursor' if rt['pageInfo']['hasNextPage'] else ''; print(f'total={len(ts)} unresolved={len(un)}{warn}')"
 ```
 
 CI が SUCCESS でない / unresolved > 0 の段階で「完了条件未達」を worker に
 [[sending-keys-to-claude-tui]] で返し、独立検証フェーズには進まない。
+
+> **Paging 注記**: `first:100` は 1 page = 最大 100 thread を見る上限。100 を超える PR では `pageInfo.hasNextPage == true` で WARNING が出るので、`after:$cursor` を加えて全 page を巡る paging ループを別途実装する必要がある。100 thread を超える PR は稀だが、長期 review や巨大変更では起こりうる。
 
 ### 2. 成果物を git push 済バージョンから取得
 
