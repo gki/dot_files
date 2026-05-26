@@ -103,14 +103,14 @@ worker が「課金問題」と申告した時、supervisor は**鵜呑みにせ
 ```bash
 # run 所要時間
 # 開始時刻 → 終了時刻。トップレベルに completedAt は無いので jobs[].completedAt の最大値を取る
-gh run view "$RUN" -R "$REPO" --json startedAt,jobs \
+gh run view "$RUN_ID" -R "$REPO" --json startedAt,jobs \
   --jq '"\(.startedAt) → \(.jobs|map(.completedAt)|max)"'
 
 # main も同症状か独立確認
 gh run list -R "$REPO" --branch main --limit 5 --json conclusion --jq '[.[].conclusion]'
 
 # ログメッセージ独立確認
-gh run view "$RUN" -R "$REPO" --log-failed 2>&1 | head -30
+gh run view "$RUN_ID" -R "$REPO" --log-failed 2>&1 | head -30
 ```
 
 判定一致なら自信を持ってエスカレーション、不一致なら worker と合わせて再調査。

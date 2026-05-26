@@ -158,9 +158,14 @@ WORKTREE_PATH=$(git -C "$REPO_DIR" worktree list --porcelain \
   | awk -v b="refs/heads/$BRANCH" '/^worktree / {p=$2} $0=="branch "b {print p; exit}')
 [ -n "$WORKTREE_PATH" ] || { echo "worktree for $BRANCH not found — abort cleanup"; exit 1; }
 
+# WORKER_PANE は pane 作成時に /tmp/wt-pane$PR.id へ保存されている前提 (supervising-worker-panes
+# skill のセットアップに従う)。環境変数の漂流で別 pane を kill しないよう、必ず file から読み取る。
+WORKER_PANE=$(cat "/tmp/wt-pane$PR.id" 2>/dev/null)
+[ -n "$WORKER_PANE" ] || { echo "/tmp/wt-pane$PR.id not found — abort (worker pane id 不明)"; exit 1; }
+
 gh pr merge "$PR" -R "$REPO" --squash --delete-branch
 git -C "$REPO_DIR" fetch origin main                        # main HEAD 確認
-tmux kill-pane -t "$WORKER_PANE"                            # worker pane 撤去
+tmux kill-pane -t "$WORKER_PANE"                            # worker pane 撤去 (file 由来の確定 id)
 git -C "$REPO_DIR" worktree remove --force "$WORKTREE_PATH" # worktree 撤去 (確定パス)
 rm -f "/tmp/wt-pane$PR.id"                                  # pane id ファイル (再実行耐性)
 # 単一 worker 監視 cron なら CronDelete でも削除
