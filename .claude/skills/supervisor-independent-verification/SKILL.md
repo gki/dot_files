@@ -85,14 +85,16 @@ CI が SUCCESS でない / unresolved > 0 の段階で「完了条件未達」�
 `git show <branch>:<path>` で取り出す:
 
 ```bash
-BRANCH=$(gh pr view $PR -R $REPO --json headRefName --jq -r .headRefName)
-git -C $REPO_DIR fetch origin "$BRANCH"
-mkdir -p /tmp/sv-verify-$PR
-git -C $REPO_DIR show "origin/$BRANCH:{{SCREENSHOT_DIR}}/<date>-<screen>-before.png" \
-  > /tmp/sv-verify-$PR/before.png
-git -C $REPO_DIR show "origin/$BRANCH:{{SCREENSHOT_DIR}}/<date>-<screen>-after.png" \
-  > /tmp/sv-verify-$PR/after.png
-ls -la /tmp/sv-verify-$PR/
+BRANCH=$(gh pr view "$PR" -R "$REPO" --json headRefName --jq -r .headRefName)
+git -C "$REPO_DIR" fetch origin "$BRANCH"
+mkdir -p "/tmp/sv-verify-$PR"
+# {{SCREENSHOT_DIR}} は末尾スラッシュ無しで指定 (`docs/screenshots` 等)。
+# パス連結時の `//` を防ぐため SKILL 側も `/` 1 個で結合している。
+git -C "$REPO_DIR" show "origin/$BRANCH:{{SCREENSHOT_DIR}}/<date>-<screen>-before.png" \
+  > "/tmp/sv-verify-$PR/before.png"
+git -C "$REPO_DIR" show "origin/$BRANCH:{{SCREENSHOT_DIR}}/<date>-<screen>-after.png" \
+  > "/tmp/sv-verify-$PR/after.png"
+ls -la "/tmp/sv-verify-$PR/"
 ```
 
 PNG が repo にコミットされていなければ ⑦ 未達。worker に追加コミット依頼を送る。
@@ -150,11 +152,11 @@ AskUserQuestion {
 ユーザーが squash merge 承認したら以下を一括実行:
 
 ```bash
-gh pr merge $PR -R $REPO --squash --delete-branch
-git -C $REPO_DIR fetch origin main                          # main HEAD 確認
-tmux kill-pane -t $WORKER_PANE                              # worker pane 撤去
-git -C $REPO_DIR worktree remove --force /path/to/wt-$PR    # worktree 撤去
-rm /tmp/wt-pane$PR.id                                       # pane id ファイル
+gh pr merge "$PR" -R "$REPO" --squash --delete-branch
+git -C "$REPO_DIR" fetch origin main                        # main HEAD 確認
+tmux kill-pane -t "$WORKER_PANE"                            # worker pane 撤去
+git -C "$REPO_DIR" worktree remove --force "/path/to/wt-$PR" # worktree 撤去
+rm "/tmp/wt-pane$PR.id"                                     # pane id ファイル
 # 単一 worker 監視 cron なら CronDelete でも削除
 ```
 

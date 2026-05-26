@@ -5,7 +5,7 @@ SKILL.md 内の `{{...}}` を、プロジェクトの実際の値に置き換え
 | プレースホルダ | 置き換える内容 | 例 |
 |--------------|--------------|-----|
 | `{{UI_COMPONENT}}` | UI ホスト/ラッパーコンポーネント名 | iOS: `UIHostingController` / Android: `ComposeView` / Web: ルートコンポーネント |
-| `{{SCREENSHOT_DIR}}` | スクショ成果物の格納先（PR diff に含めるパス） | `docs/screenshots/`, `tests/visual/snapshots/` |
+| `{{SCREENSHOT_DIR}}` | スクショ成果物の格納先 (PR diff に含めるパス、**末尾スラッシュ無し**) | `docs/screenshots`, `tests/visual/snapshots` |
 
 `$PR`, `$REPO`, `$REPO_DIR`, `$BRANCH` などはランタイム値です（実行時に PR 番号等から決まる）。
 
@@ -19,10 +19,10 @@ SKILL.md 内の `{{...}}` を、プロジェクトの実際の値に置き換え
 スクショ取得例（git push 済バージョンから）:
 
 ```bash
-git -C $REPO_DIR show "origin/$BRANCH:docs/screenshots/2026-05-26-settings-before.png" \
-  > /tmp/sv-verify-$PR/before.png
-git -C $REPO_DIR show "origin/$BRANCH:docs/screenshots/2026-05-26-settings-after.png" \
-  > /tmp/sv-verify-$PR/after.png
+git -C "$REPO_DIR" show "origin/$BRANCH:docs/screenshots/2026-05-26-settings-before.png" \
+  > "/tmp/sv-verify-$PR/before.png"
+git -C "$REPO_DIR" show "origin/$BRANCH:docs/screenshots/2026-05-26-settings-after.png" \
+  > "/tmp/sv-verify-$PR/after.png"
 ```
 
 screenshot-fidelity-check の 2/2b/2c/2d/2e（getbbox 残差・罫線ズレ・テキスト帯ズレ・要素 bbox ズレ・色 hex 不一致）を**全部**回す。worker が報告した軸だけ追試するのではない。
