@@ -85,7 +85,7 @@ CI が SUCCESS でない / unresolved > 0 の段階で「完了条件未達」�
 `git show <branch>:<path>` で取り出す:
 
 ```bash
-BRANCH=$(gh pr view "$PR" -R "$REPO" --json headRefName --jq -r .headRefName)
+BRANCH=$(gh pr view "$PR" -R "$REPO" --json headRefName --jq '.headRefName')
 git -C "$REPO_DIR" fetch origin "$BRANCH"
 mkdir -p "/tmp/sv-verify-$PR"
 # {{SCREENSHOT_DIR}} は末尾スラッシュ無しで指定 (`docs/screenshots` 等)。
