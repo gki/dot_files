@@ -55,9 +55,9 @@ workoutimer の本番運用で GitHub Actions の支出制限到達 で CI が *
 
 ```bash
 # 最新 fail run の所要時間
-gh run view $RUN_ID -R $REPO --json startedAt,createdAt,jobs \
-  --jq '.jobs[]|{name, conclusion, started_at, completed_at}'
-# completed_at - started_at が < 5s なら兆候 #1
+gh run view $RUN_ID -R $REPO --json jobs \
+  --jq '.jobs[]|{name, conclusion, startedAt, completedAt}'
+# completedAt - startedAt が < 5s なら兆候 #1（gh CLI は camelCase）
 
 # main ブランチでも同症状か
 gh run list -R $REPO --branch main --limit 3 \
@@ -102,8 +102,9 @@ worker が「課金問題」と申告した時、supervisor は**鵜呑みにせ
 
 ```bash
 # run 所要時間
-gh run view <RUN> -R $REPO --json startedAt,createdAt \
-  --jq '"\(.startedAt) → \(.createdAt)"'
+# 開始時刻 → 終了時刻。トップレベルに completedAt は無いので jobs[].completedAt の最大値を取る
+gh run view <RUN> -R $REPO --json startedAt,jobs \
+  --jq '"\(.startedAt) → \(.jobs|map(.completedAt)|max)"'
 
 # main も同症状か独立確認
 gh run list -R $REPO --branch main --limit 5 --json conclusion --jq '[.[].conclusion]'
