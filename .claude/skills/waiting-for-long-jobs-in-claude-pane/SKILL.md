@@ -66,7 +66,7 @@ Monitor(
 )
 ```
 
-Each matching line becomes a `<task-notification>`. Your TUI receives events at roughly the job's emission rate, so it never sits idle long enough to time out. Cover failure signatures, not just success — `grep "PASS"` alone goes silent on a crash. See the Monitor tool's own "Coverage — silence is not success" guidance.
+Each matching line becomes a `<task-notification>`. Your TUI receives events at roughly the test's emission rate, so it never sits idle long enough to time out. Cover failure signatures, not just success — `grep "PASS"` alone goes silent on a crash. See the Monitor tool's own "Coverage — silence is not success" guidance.
 
 ### C. `until`-loop polling — for binary state changes (file exists, status flips)
 
@@ -80,6 +80,36 @@ done
 ```
 
 Block in foreground, polling at a sensible interval. Same liveness story as Pattern A.
+
+### D. agmsg による完了通知（推奨・agmsg インストール済みの場合）
+
+Pattern A/B/C でジョブを実行しつつ、完了時に agmsg で supervisor へ push する。capture-pane ポーリング不要。
+
+**worker 側:**
+
+```bash
+# Pattern A（foreground）と組み合わせ
+timeout 600 {{LONG_BUILD_COMMAND}} 2>&1 | tail -200 \
+  && ~/.agents/skills/agmsg/scripts/send.sh <team> worker supervisor "✅ ビルド/テスト完了" \
+  || ~/.agents/skills/agmsg/scripts/send.sh <team> worker supervisor "❌ ビルド/テスト失敗 — ログ確認が必要"
+
+# Pattern B（Monitor）と組み合わせ: Monitor でジョブを追いつつ、完了ログを検知したら agmsg 通知
+# Monitor で成功シグネチャ（例: "** TEST SUCCEEDED", "Build Succeeded"）を捕捉したターンで agmsg send を実行する
+```
+
+**supervisor 側:**
+
+```bash
+# agmsg inbox を確認（monitor モードなら watch.sh が自動 push、レイテンシ約 3〜4 秒）
+~/.agents/skills/agmsg/scripts/inbox.sh <team-name> supervisor
+```
+
+メリット:
+- 完了メッセージが確実に届く（SQLite 書き込みは原子的）
+- 長時間ジョブで CronCreate 巡回を不要にできる
+- 完了と失敗を区別したメッセージを送れる
+
+注意: **agmsg 単独では TUI タイムアウト問題を解決できない。** Pattern A/B/C でジョブを実行中に TUI を生かし、完了通知だけを agmsg で送る組み合わせが正しい。
 
 ## Anti-Patterns to Reject
 
@@ -99,4 +129,4 @@ Block in foreground, polling at a sensible interval. Same liveness story as Patt
 
 ## If You're Already Dead
 
-If a supervisor wakes you with "your previous session exited and your background job was killed," do not assume the job's results are recoverable. Re-run the verification step from scratch using Pattern A or B. See [[sending-keys-to-claude-tui]] for the supervisor side of dead-TUI detection and `claude --resume` recovery.
+If a supervisor wakes you with "your previous session exited and your background job was killed," do not assume the job's results are recoverable. Re-run the verification step from scratch using Pattern A or B. See `sending-keys-to-claude-tui` for the supervisor side of dead-TUI detection and `claude --resume` recovery.

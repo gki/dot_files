@@ -13,7 +13,7 @@ tmux panes default to opaque IDs (`%0`, `%10`). A human watching a multi-pane la
 
 ```bash
 # 1. Title each pane (do this right after creating it)
-tmux select-pane -t "$PANE_ID" -T "SUPERVISOR ($PANE_ID)"
+tmux select-pane -t "$PANE_ID" -T 'SUPERVISOR (%0)'
 tmux select-pane -t "$WORKER_ID" -T 'WORKER #{{ISSUE_NUM}} (wt-{{ISSUE_NUM}})'
 
 # 2. Show titles on the pane border (global, once per session)
@@ -45,7 +45,7 @@ tmux select-pane -t "$WORKER_ID" -T "WORKER #{{ISSUE_NUM}} (wt-{{ISSUE_NUM}})"
 
 Make the title answer "what is this pane for?" at a glance:
 
-- Role + identifier: `SUPERVISOR ($PANE_ID)` (例: `SUPERVISOR (%0)`), `WORKER #{{ISSUE_NUM}} (wt-{{ISSUE_NUM}})`
+- Role + identifier: `SUPERVISOR (%0)`, `WORKER #{{ISSUE_NUM}} (wt-{{ISSUE_NUM}})`
 - Include the issue/PR number and worktree dir when relevant — that is what the human is tracking.
 - Keep it short; the border truncates.
 

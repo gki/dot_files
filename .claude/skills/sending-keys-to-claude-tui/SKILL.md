@@ -5,6 +5,40 @@ description: Use when injecting a message or command into a Claude Code (or othe
 
 # Sending Keys to a Claude Code TUI in tmux
 
+## agmsg-first ポリシー（2026-06 以降）
+
+**agmsg がインストール済みの場合、send-keys の用途を以下に限定する:**
+
+- TUI 生死確認（capture-pane で `❯` の有無を確認）
+- ダイアログ・選択肢への応答（y/n、番号入力）
+- claude 初回起動コマンド送信
+- **worker への最初の1通**（agmsg join 指示を含む）
+
+**それ以外の全メッセージは agmsg 経由で送る（短文でも同様）。**
+
+理由: SQLite 経由で長文・日本語・特殊文字が壊れない。履歴が残る。非同期で溜められる。
+
+### agmsg の使い方
+
+```bash
+# supervisor から worker へ送信
+~/.agents/skills/agmsg/scripts/send.sh <team> supervisor worker "<メッセージ>"
+
+# 受信確認
+~/.agents/skills/agmsg/scripts/inbox.sh <team> supervisor
+```
+
+worker 初回起動テンプレート（send-keys で送る **最初の1通** に含める）:
+
+```
+agmsg join <team-name> worker claude-code <worktree-path>
+agmsg mode monitor
+```
+
+agmsg インストール確認: `ls ~/.agents/skills/agmsg/scripts/send.sh 2>/dev/null && echo installed || echo not installed`
+
+---
+
 ## Overview
 
 `tmux send-keys -t PANE "text" Enter` in a **single call** does NOT submit in Claude Code's TUI. The TUI debounces paste-like input; the trailing `Enter` arrives before the input box has committed the text, so it is absorbed (treated as a newline / dropped) and the message sits unsubmitted in the input box.
@@ -101,7 +135,7 @@ tmux send-keys -t "$P" Enter
 ## The Reliable Pattern
 
 ```bash
-P=$(cat /tmp/wt-pane{{NN}}.id)           # target pane id
+P=$(cat /tmp/wt-pane{{NN}}.id)            # target pane id
 tmux send-keys -t "$P" -l "$MSG"         # -l = literal: text only, no Enter
 sleep 0.5
 tmux send-keys -t "$P" Enter             # separate call submits it

@@ -21,11 +21,12 @@ CI/ビルド/ツールの失敗が **コード由来でなく外部要因（課�
 エスカレーションする手順。
 
 関連: [[supervising-worker-panes]] / [[supervisor-independent-verification]] /
-[[sending-keys-to-claude-tui]]
+[[sending-keys-to-claude-tui]] / 既存 memory `project_ci_strict_concurrency`
+（こちらは「コード由来の既知パターン」で本 skill とは対照的）
 
 ## なぜ skill 化するか
 
-workoutimer の本番運用で GitHub Actions の支出制限到達 で CI が **2 秒で fail**
+本番運用中のプロジェクトで GitHub Actions の支出制限到達 で CI が **2 秒で fail**
 し続けた時、最初 worker は「コード由来かもしれない」と数巡レビューループに突入
 した。実際は repo オーナーの billing 操作が必要で、worker / supervisor が何時間
 費やしてもコード側では絶対に解決しない。
@@ -55,17 +56,17 @@ workoutimer の本番運用で GitHub Actions の支出制限到達 で CI が *
 
 ```bash
 # 最新 fail run の所要時間
-gh run view "$RUN_ID" -R "$REPO" --json jobs \
-  --jq '.jobs[]|{name, conclusion, startedAt, completedAt}'
-# completedAt - startedAt が < 5s なら兆候 #1（gh CLI は camelCase）
+gh run view $RUN_ID -R $REPO --json startedAt,createdAt,jobs \
+  --jq '.jobs[]|{name, conclusion, started_at, completed_at}'
+# completed_at - started_at が < 5s なら兆候 #1
 
 # main ブランチでも同症状か
-gh run list -R "$REPO" --branch main --limit 3 \
+gh run list -R $REPO --branch main --limit 3 \
   --json conclusion,createdAt,workflowName \
   --jq '.[]|"\(.conclusion) \(.workflowName) \(.createdAt)"'
 
 # ログから billing / outage 文言検出
-gh run view "$RUN_ID" -R "$REPO" --log 2>&1 \
+gh run view $RUN_ID -R $REPO --log 2>&1 \
   | grep -iE 'billing|spending|payment|quota|rate.?limit|outage|unavailable|cert.?(expir|invalid)'
 ```
 
@@ -102,15 +103,14 @@ worker が「課金問題」と申告した時、supervisor は**鵜呑みにせ
 
 ```bash
 # run 所要時間
-# 開始時刻 → 終了時刻。トップレベルに completedAt は無いので jobs[].completedAt の最大値を取る
-gh run view "$RUN_ID" -R "$REPO" --json startedAt,jobs \
-  --jq '"\(.startedAt) → \(.jobs|map(.completedAt)|max)"'
+gh run view <RUN> -R $REPO --json startedAt,createdAt \
+  --jq '"\(.startedAt) → \(.createdAt)"'
 
 # main も同症状か独立確認
-gh run list -R "$REPO" --branch main --limit 5 --json conclusion --jq '[.[].conclusion]'
+gh run list -R $REPO --branch main --limit 5 --json conclusion --jq '[.[].conclusion]'
 
 # ログメッセージ独立確認
-gh run view "$RUN_ID" -R "$REPO" --log-failed 2>&1 | head -30
+gh run view <RUN> -R $REPO --log-failed 2>&1 | head -30
 ```
 
 判定一致なら自信を持ってエスカレーション、不一致なら worker と合わせて再調査。
