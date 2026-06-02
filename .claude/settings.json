@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash ~/.claude/hooks/session-start-tmux-check.sh",
+            "command": "bash .claude/hooks/session-start-tmux-check.sh",
             "statusMessage": "tmux 環境を検出中..."
           }
         ]
@@ -15,6 +15,6 @@
   },
   "statusLine": {
     "type": "command",
-    "command": "bash ~/.claude/statusline-command.sh"
+    "command": "bash .claude/statusline-command.sh"
   }
 }
