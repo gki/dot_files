@@ -20,17 +20,16 @@ description: >
 - 2 つ以上の独立タスクを並列で別 worker に投げ、supervisor が進捗を監視するとき
 - 1 タスクでも、長時間ジョブを別ペインの worker に任せて supervisor が見守るとき
 
-## Pre-Setup: 自分の tmux 位置と「ユーザーが見ている session」を必ず確認
+## Pre-Setup: 自分の tmux 位置を必ず確認
 
 worker を派遣する **前** に、以下を 1 度だけ実行する:
 
 ```bash
 echo "my_pane=$TMUX_PANE my_session=$(tmux display-message -p '#{session_name}')"
-tmux list-clients -F 'attached_session=#{client_session}'
 ```
 
 - SessionStart hook (`~/.claude/hooks/session-start-tmux-check.sh`) が同等情報を最初のターンに注入しているはず — その内容を最初に確認。
-- **自分の session ≠ ユーザー attach 中 session** の場合、tmux split-window で作る pane はユーザーから見えない位置に出る。先に `tmux switch-client` / `attach-session` で揃えるか、後述の通り **target を ユーザー session の pane id で明示** する。
+- **worker pane は必ず supervisor 自身の session に作る**。ユーザーの attach session と異なっていても、supervisor の session を使うこと。理由: session が違えば作業ディレクトリが異なり、別の supervisor が存在する可能性があるため、監視・復旧が重複してコンフリクトする。
 - 関連: memory [[feedback_session_start_tmux_check]] / [[feedback_supervisor_no_code_edit]]
 
 ## agmsg-first ポリシー（2026-06 以降）
@@ -58,15 +57,15 @@ tmux list-clients -F 'attached_session=#{client_session}'
 worker 1 体につき:
 
 1. `git worktree add /path/wt-NN -b feature/...` で隔離ワークスペース作成
-2. **ユーザーが見ている session 内に新規 pane を split-window で作る** — pane id を即捕捉して `/tmp/wt-paneNN.id` に保存。
+2. **supervisor 自身の session 内に新規 pane を split-window で作る** — pane id を即捕捉して `/tmp/wt-paneNN.id` に保存。
    ```bash
-   # ユーザー session の任意 pane を target にして split (-h: 横分割 / -v: 縦分割)
-   USER_SESSION=$(tmux list-clients -F '#{client_session}' | head -1)
-   ANCHOR_PANE=$(tmux list-panes -t "$USER_SESSION:" -F '#{pane_id}' | head -1)
+   # supervisor の session を target にして split (-h: 横分割 / -v: 縦分割)
+   MY_SESSION=$(tmux display-message -p '#{session_name}')
+   ANCHOR_PANE=$(tmux list-panes -t "$MY_SESSION:" -F '#{pane_id}' | head -1)
    WORKER_PANE=$(tmux split-window -h -P -F '#{pane_id}' -t "$ANCHOR_PANE" -c /path/wt-NN)
    echo "$WORKER_PANE" > /tmp/wt-paneNN.id
    ```
-   - **禁止事項**: (a) `tmux new-window` で別 window に追い出す / (b) **既存の別 session の idle pane を流用** する (`%14 が空いてるから使おう` 的判断) / (c) 自分の session と違う session でも target 指定なしで split。いずれもユーザー視界外に worker が出て、ユーザーが「見えない」と困る原因になる。
+   - **禁止事項**: (a) `tmux new-window` で別 window に追い出す / (b) **既存の別 session の idle pane を流用** する (`%14 が空いてるから使おう` 的判断) / (c) 別 session に split する（監視・復旧が別 supervisor と重複する原因になる）。
 3. ペイン命名（[[naming-tmux-panes]]）
 4. `.worker-prompt.md` を worktree に置く（[[development-workflow]] の Parallel Worker Dispatch Checklist の項目を必ず含める）
 5. ペインで `cd /path/wt-NN && claude` 起動 → `❯` 確認 → **send-keys で最初の1通だけ** 投入（[[sending-keys-to-claude-tui]]）。この1通に以下を含める:
@@ -184,4 +183,4 @@ worker が完了に達し人間へマージ可否を確認する際、**worker �
 - **cron 消し忘れ** — 完了後の `CronDelete` を忘れない
 - **hung を経過時間表示で見逃す** — `ps` の etime で裏取り
 - **拡張スコープの取りこぼし** — worker が「コード完了」で止まったら、文書化・issue 反映などの残タスクを促す
-- **ユーザー視界外に worker pane を作る** — `new-window` / 別 session / 他 session の既存 idle pane 流用。すべて NG。worker は必ずユーザー attach 中 session に split-window する。SessionStart hook 出力で「same_session=YES」を最初に確認する習慣をつける
+- **別 session に worker pane を作る** — `new-window` / 別 session / 他 session の既存 idle pane 流用。すべて NG。worker は必ず **supervisor 自身の session** に split-window する。別 session は作業ディレクトリが異なり、別の supervisor が存在して監視・復旧が重複するリスクがある。
