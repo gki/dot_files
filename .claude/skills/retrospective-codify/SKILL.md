@@ -29,19 +29,19 @@ description: タスク完了時に「最初に失敗した内容」と「最終�
 
    検索キー候補は気付きから 2 〜 3 語抽出する（ツール名・API 名・症状語・対義語）。例: 気付きが「pnpm v10 を使う」なら `pnpm`, `packageManager`, `lockfile`。
 
-   照合先と最低限の検索（Claude Code 内なら `Grep` ツール、シェル直接実行なら `grep -R` を使う。下記は agent 向けの疑似コード表記で、`Grep` は Claude tool を意図している。シェルでコピペ実行する場合は `grep -R`／`rg` に読み替える）:
+   照合先と最低限の検索:
    ```
    # skill 重複（global）
    ls ~/.claude/skills/
-   Grep "<キー>" ~/.claude/skills/*/SKILL.md          # shell では: grep -R "<キー>" ~/.claude/skills/
+   Grep "<キー>" ~/.claude/skills/*/SKILL.md
 
    # CLAUDE.md 重複
-   Grep "<キー>" ~/.claude/CLAUDE.md                  # shell では: grep "<キー>" ~/.claude/CLAUDE.md
-   Grep "<キー>" <project-root>/CLAUDE.md             # shell では: grep "<キー>" <project-root>/CLAUDE.md
+   Grep "<キー>" ~/.claude/CLAUDE.md
+   Grep "<キー>" <project-root>/CLAUDE.md   # 該当プロジェクトがある場合
 
    # lint ルール重複
    ls <project-root>/rules/
-   Grep "<キー>" <project-root>/rules/                # shell では: grep -R "<キー>" <project-root>/rules/
+   Grep "<キー>" <project-root>/rules/
    ```
 
    結果を 4 段階に分類:
@@ -90,7 +90,7 @@ digraph classify {
 ## 出力テンプレート
 
 ### ast-grep ルール
-`ast-grep-practice` skill (本 repo 未同梱、別途 user scope 等で導入する前提) を参照。`rules/` ディレクトリに YAML を追加し、`rule-tests/` に valid / invalid ペアを必ず書く。
+`ast-grep-practice` skill を参照。`rules/` ディレクトリに YAML を追加し、`rule-tests/` に valid / invalid ペアを必ず書く。
 
 ### CLAUDE.md への追記
 ```markdown
@@ -247,5 +247,5 @@ message: Set/Map のサイズは .size プロパティを使う。
 ## 関連 skill
 
 - `superpowers:writing-skills` — 新規 skill を書くときのテンプレと TDD フロー
-- `ast-grep-practice` — lint ルール化する場合の書き方とテスト (本 repo 未同梱、別途導入)
-- `update-config` — settings.json / permissions の変更が必要な場合 (本 repo 未同梱、別途導入)
+- `ast-grep-practice` — lint ルール化する場合の書き方とテスト
+- `update-config` — settings.json / permissions の変更が必要な場合

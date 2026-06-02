@@ -59,7 +59,7 @@ cat package.json
 |----|-----------|--------|------|------|
 | #N | package-name old→new | patch/minor/major | ✅/⚠️ | 根拠1文 |
 
-`{{PREBUILD_CMD}}` が必要なPRは備考に明記する。
+`{{PREBUILD_CMD}}` が必要なPRは備考に明記する。（プロジェクトで使用しない場合はこの列を省略）
 
 ### Step 5: Merge approved PRs
 
