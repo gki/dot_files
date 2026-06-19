@@ -4,7 +4,7 @@ SKILL.md 内の `{{...}}` を、プロジェクトの実際の値に置き換え
 
 | プレースホルダ | 置き換える内容 | 例 |
 |--------------|--------------|-----|
-| `{{PROJECT_NAME}}` | プロジェクト識別名（tmux window 名に使う） | `myapp`, `workoutimer` |
+| `{{PROJECT_NAME}}` | プロジェクト識別名（tmux window 名に使う） | `myapp`, `myproject` |
 | `{{ISSUE_NUM}}` | worker が対応している issue / PR 番号 | `58`, `123` |
 
 ## 補足

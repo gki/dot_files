@@ -143,6 +143,14 @@ query {
 → 顕在化していない / 公式に問題とされていない → **対応しない**（理由を明記して返信）  
 → 顕在化している / 公式が問題を認めている → **対応する**
 
+#### 4. 循環変更チェック
+過去のレビューラウンドで既に対応した変更を「元に戻せ」と指摘している、または A→B→A→B... のように同じ箇所への変更が往復している状態を検出する。
+
+- 今回の指摘が「前回の修正コミット以前の状態に戻す」変更を求めていないか確認する
+- PR のコメント履歴・コミット履歴を遡り、同一箇所で同じ議論が繰り返されていないか確認する
+
+→ 循環と判断した場合 → **対応しない**（循環の経緯を1〜2文で説明してresolve）
+
 #### 5. 対応済み指摘との矛盾チェック
 既に対応済みの別指摘と方向性が矛盾していないか確認する。
 
@@ -327,6 +335,20 @@ reviewThreads(first: 50)
 | COMMENT_ID | 数値（REST API ID） | in_reply_to パラメータ |
 
 REST APIのcomment IDとGraphQLのthread IDは**別物**。混同するとエラーになる。
+
+## Copilot login の表記揺れ（よくある失敗）
+
+同じ Copilot を指す `login` がエンドポイントごとに別表記になる。monitor やフィルタを `=="Copilot"` の完全一致で組むと **永久に検知漏れ**する。
+
+| 取得元 | `login` の値 |
+|---|---|
+| `gh api .../pulls/N/reviews` の `.user.login` | `copilot-pull-request-reviewer[bot]` |
+| GraphQL `reviewThreads...comments.author.login` | `copilot-pull-request-reviewer`（`[bot]` なし） |
+| `requested_reviewers` / PR UI | `Copilot` |
+
+- reviews を数える monitor: `select(.user.login=="copilot-pull-request-reviewer[bot]")`、または `ascii_downcase | contains("copilot")` で表記揺れを吸収する。
+- 再レビュー依頼の DELETE/POST は `--raw-field 'reviewers[]=copilot-pull-request-reviewer[bot]'`（`[bot]` 必須・`-f` だと 422）。
+- monitor / フィルタを組む前に、実 login を1回 API で確認する（実プロジェクトで実証）。
 
 ## 次のステップ早見表
 

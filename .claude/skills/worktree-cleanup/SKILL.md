@@ -133,6 +133,22 @@ done
 - DerivedData は **次回ビルドで自動再生成** されるため、誤って消しても致命傷にならない。判断に迷ったら消してよい
 - 並列で複数 worktree を回した直後は **simulator のキャッシュ**も肥大している可能性 → `xcrun simctl delete unavailable` も併用（OS 不一致の古い simulator を一掃）
 
+### Step 8: マージ後、メインリポジトリの main を最新化
+
+worktree とブランチを撤去したら、**メインリポジトリのローカル `main` を origin と揃える**。これを忘れると、ローカル main がマージ前の古いコミットに取り残され、次の作業を古い基点から始めてしまう（取りこぼし防止）。
+
+```bash
+# ケースA（通常）: MAIN_REPO_PATH が main をチェックアウト中 → FF pull
+git -C MAIN_REPO_PATH pull --ff-only
+
+# ケースB: MAIN_REPO_PATH が別ブランチ作業中 → checkout せず local main ref だけ FF 更新
+git -C MAIN_REPO_PATH fetch origin main:main
+```
+
+- `--ff-only` / refspec FF なので、想定外のマージコミットを作らず、履歴が分岐していれば安全に停止する（黙って main を書き換えない）。
+- 確認: `git -C MAIN_REPO_PATH log -1 --oneline main` が origin/main と一致すること。
+- supervisor 運用では MAIN_REPO_PATH（pane_index 0 の作業ディレクトリ）が main のことが多いのでケースA。worktree で feature 作業中ならケースB。
+
 ---
 
 ## よくあるエラーと対処
@@ -154,6 +170,7 @@ BRANCH={{BRANCH_NAME}}
 
 git -C "$MAIN" worktree remove "$WORKTREE"
 git -C "$MAIN" branch -d "$BRANCH"
+git -C "$MAIN" pull --ff-only          # Step 8 (Case A: $MAIN が main を check-out 中). Case B (別ブランチ作業中) は: git -C "$MAIN" fetch origin main:main
 git -C "$MAIN" worktree list
 git -C "$MAIN" branch
 ```
@@ -185,7 +202,10 @@ for dir in ~/Library/Developer/Xcode/DerivedData/*/; do
   fi
 done
 
-# 5. 完了確認
+# 5. ローカル main を最新化（Step 8。別ブランチ作業中なら fetch origin main:main）
+git -C "$MAIN" pull --ff-only
+
+# 6. 完了確認
 git -C "$MAIN" worktree list
 git -C "$MAIN" branch
 ```
