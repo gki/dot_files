@@ -170,7 +170,7 @@ BRANCH={{BRANCH_NAME}}
 
 git -C "$MAIN" worktree remove "$WORKTREE"
 git -C "$MAIN" branch -d "$BRANCH"
-git -C "$MAIN" pull --ff-only          # Step 8: ローカル main を最新化（別ブランチ作業中なら fetch origin main:main）
+git -C "$MAIN" pull --ff-only          # Step 8 (Case A: $MAIN が main を check-out 中). Case B (別ブランチ作業中) は: git -C "$MAIN" fetch origin main:main
 git -C "$MAIN" worktree list
 git -C "$MAIN" branch
 ```

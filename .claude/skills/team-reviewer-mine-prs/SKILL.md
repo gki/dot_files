@@ -69,3 +69,4 @@ gh api graphql -f query='
 - 差分自動更新・cron・reviewer weight 付けは **範囲外**
 - まず手動トリガで「PR レビュースレッド → 観点草案」を出すところまで
 - 関連: 観点の昇格スキーマと INDEX 運用は `team-reviewer-promote-memory` と共通。実体は `.claude/team-reviewer/` に一本化する
+- **Out of MVP**: cron 差分自動更新 / reviewer weight 付け / 観点クラスタリング / 既存 .md への自動マージ

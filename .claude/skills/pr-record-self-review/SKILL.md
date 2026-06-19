@@ -143,16 +143,15 @@ gh api repos/OWNER/REPO/pulls/<N>/comments \
 ### Step 5: 未解決スレッド 0 件の最終確認
 
 ```bash
-gh api graphql -f query='
-query {
-  repository(owner: "OWNER", name: "REPO") {
-    pullRequest(number: <N>) {
-      reviewThreads(last: 100) {
-        nodes { isResolved }
+N=3  # or your PR number
+gh api graphql -F owner=OWNER -F name=REPO -F pr=$N -f query='
+  query($owner:String!,$name:String!,$pr:Int!) {
+    repository(owner:$owner, name:$name) {
+      pullRequest(number:$pr) {
+        reviewThreads(last:100) { nodes { isResolved } }
       }
     }
-  }
-}' --jq '[.data.repository.pullRequest.reviewThreads.nodes[]
+  }' --jq '[.data.repository.pullRequest.reviewThreads.nodes[]
          | select(.isResolved == false)] | length'
 ```
 
