@@ -136,3 +136,20 @@ gh run view <RUN> -R $REPO --log-failed 2>&1 | head -30
 | Apple Developer cert 期限切れ | xcodebuild が `code signing` で失敗 / cert 期限ログ | Xcode / Apple Developer 設定 |
 | Package registry outage | `pod install` / `npm` / `pip` が DNS or 502/503 | プロバイダ status |
 | GitHub API rate limit | `gh api` が 403 + `rate limit exceeded` | `gh auth refresh` or 待機 |
+| Copilot レビュー停止（quota/サブスク/repo 設定） | レビュー依頼 POST が **200 を返すのに `requested_reviewers` に無反映**（`Copilot` / `copilot-pull-request-reviewer[bot]` 両名義で再現）。裏取り: 直近マージ済み PR のレビュー実績を `gh pr view N --json reviews` で確認し、ある時点以降 **repo 全体でレビューなし**なら外部要因確定 | リトライ停止 → 人間に Copilot サブスク/quota/repo 設定の確認を依頼。マージ判断は「レビューなしマージ（過去 PR と同運用）」を選択肢として提示 |
+| GitHub API 障害の回復期残滓（GraphQL のみ 401） | `gh auth status` 正常 + githubstatus は復旧済みなのに特定 gh サブコマンド（`gh pr merge` / `gh pr checks` 等）だけ 401 連発 | REST 等価エンドポイントで貫通を試す（下記） |
+
+### GraphQL のみ 401 が残る回復期パターン
+
+GitHub の認証系障害は「status ページ復旧後も GraphQL API にだけ 401 残滓が残る」ことがある（実例: 復旧宣言後も `gh pr merge` が 5 回連続 401、REST は全て 200）。`gh pr merge` / `gh pr checks` などのサブコマンドは内部で GraphQL を使うため、この残滓に巻き込まれる。
+
+**「auth は正常・status は復旧済み・特定 gh コマンドだけ 401」のときはコード/認証起因を疑わず、REST 等価エンドポイントを試す:**
+
+```bash
+# gh pr merge の代替
+gh api -X PUT repos/OWNER/REPO/pulls/N/merge -f merge_method=merge
+# gh pr checks の代替（check-runs API）
+gh api repos/OWNER/REPO/commits/SHA/check-runs --jq '.check_runs[]|{name,conclusion}'
+```
+
+REST が通れば作業は止めずに完了できる。リトライ待機（数十分）より先にこの貫通を試す。

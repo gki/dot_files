@@ -63,7 +63,7 @@ If a dialog is showing, the worker is **asking for a decision**. Read the questi
 
 ### Ghost suggestion: dimmed text after `❯` is NOT real input
 
-`capture-pane -p` (plain) **strips all color**. A pane bottom like `❯ #108 に着手して` looks like the worker typed pending text into the input box — but it may be a **ghost suggestion** (autocomplete hint) the Claude Code TUI displays *when the input box is empty*. The input buffer is actually **empty**; the suggestion is just a visual hint.
+`capture-pane -p` (plain) **strips all color**. A pane bottom like `❯ #<N> に着手して` looks like the worker typed pending text into the input box — but it may be a **ghost suggestion** (autocomplete hint) the Claude Code TUI displays *when the input box is empty*. The input buffer is actually **empty**; the suggestion is just a visual hint.
 
 Ghost suggestions render in **dim / faint** mode (SGR `\033[2m`). Real typed input renders at normal brightness. To tell them apart, capture **with escape sequences** and inspect:
 
@@ -131,6 +131,21 @@ tmux send-keys -t "$P" Enter
 ```
 
 `claude --resume` reconstitutes the conversation; it does NOT resurrect killed child processes. State that gap in the recovery message.
+
+## Recovering a parse-error loop (alive-but-broken)
+
+A different failure from a dead TUI: the pane shows `⏺ The model's tool call could not be parsed (retry also failed).` followed by an idle `❯`. The **TUI is alive** (NOT the `Resume this session with:` dead state) — the model is emitting tool calls the harness can't parse, and the built-in retry already failed. Re-sending the same instruction usually hits the SAME parse error again.
+
+This is NOT fixed with `claude --resume` (that's for an exited TUI). Recover with `/clear`:
+
+1. Send `/clear` to reset the conversation context. `/clear` is a **client-side command**, so it works even while the model can't emit parseable tool calls:
+   ```bash
+   tmux send-keys -t "$P" -l '/clear'; sleep 0.6
+   tmux send-keys -t "$P" Enter
+   ```
+   Verify the welcome banner reappears (context cleared).
+2. Re-dispatch with a **resume-point instruction** — a fresh, self-contained prompt (or a `.worker-resume.md` file to Read) that states the **current state** (what is already done — e.g. "the edit is already in the worktree uncommitted, do NOT redo it") and the **remaining steps**. After `/clear` the worker has no memory, so spell out where to pick up.
+3. Verify it starts processing without re-hitting the parse error (active spinner showing `tokens`/`thinking`). If it parse-errors again post-`/clear`, escalate to the human (likely transient model/infra issue) — e.g. supervisor does the trivial remaining step as a one-off, or wait and retry.
 
 ## The Reliable Pattern
 
