@@ -13,9 +13,9 @@ fi
 repo_root=$(git rev-parse --show-toplevel)
 cd "$repo_root"
 
-# Added / Copied / Modified なステージファイルから .claude/skills/*/SKILL.md だけ拾う
+# Added / Copied / Modified / Renamed なステージファイルから .claude/skills/*/SKILL.md だけ拾う
 mapfile -t staged < <(
-  git diff --cached --name-only --diff-filter=ACM -z |
+  git diff --cached --name-only --diff-filter=ACMR -z |
     tr '\0' '\n' |
     grep -E '^\.claude/skills/[^/]+/SKILL\.md$' || true
 )
