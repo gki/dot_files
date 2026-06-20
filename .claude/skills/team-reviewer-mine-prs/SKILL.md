@@ -1,6 +1,10 @@
 ---
 name: team-reviewer-mine-prs
-description: Use when mining merged PR review threads to draft new team:reviewer knowledge entries. Classifies review comments into accept(do)/reject(suppress)/noise. Triggers: "PR レビューから観点を抽出", "reviewThreads をマイニング", "mine PR reviews for reviewer knowledge".
+description: >
+  Use when mining merged PR review threads to draft new team:reviewer knowledge
+  entries. Classifies review comments into accept(do)/reject(suppress)/noise.
+  Triggers: "PR レビューから観点を抽出", "reviewThreads をマイニング",
+  "mine PR reviews for reviewer knowledge".
 ---
 
 # team-reviewer-mine-prs

@@ -1,6 +1,11 @@
 ---
 name: team-reviewer
-description: Use when reviewing a diff/PR for this project — applies generic code-review criteria plus project-specific review knowledge loaded from .claude/team-reviewer/*.md. Triggers: "team:reviewer でレビュー", "diff をレビュー", "プロジェクト固有観点でレビュー", "review with project knowledge".
+description: >
+  Use when reviewing a diff/PR for this project — applies generic code-review
+  criteria plus project-specific review knowledge loaded from
+  .claude/team-reviewer/*.md. Triggers: "team:reviewer でレビュー",
+  "diff をレビュー", "プロジェクト固有観点でレビュー",
+  "review with project knowledge".
 ---
 
 # team:reviewer

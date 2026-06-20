@@ -1,6 +1,10 @@
 ---
 name: team-reviewer-promote-memory
-description: Use when promoting accumulated review-related memory entries into the project's team:reviewer knowledge store (.claude/team-reviewer/*.md). Triggers: "memory をレビュー観点に昇格", "team-reviewer 知識ストアに昇格", "promote memory to reviewer".
+description: >
+  Use when promoting accumulated review-related memory entries into the
+  project's team:reviewer knowledge store (.claude/team-reviewer/*.md).
+  Triggers: "memory をレビュー観点に昇格", "team-reviewer 知識ストアに昇格",
+  "promote memory to reviewer".
 ---
 
 # team-reviewer-promote-memory

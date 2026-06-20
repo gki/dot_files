@@ -1,0 +1,124 @@
+#!/usr/bin/env bash
+# commit 前にステージされた .claude/skills/*/SKILL.md の frontmatter を YAML パースして検証する。
+# 有効化: git config core.hooksPath .githooks
+# スキップ: SKILL_YAML_PRE_COMMIT_SKIP=1 git commit
+# パーサ異常終了時も通す: SKILL_YAML_PRE_COMMIT_FAIL_OPEN=1 git commit
+
+set -euo pipefail
+
+if [[ "${SKILL_YAML_PRE_COMMIT_SKIP:-}" == "1" ]]; then
+  exit 0
+fi
+
+repo_root=$(git rev-parse --show-toplevel)
+cd "$repo_root"
+
+# Added / Copied / Modified / Renamed なステージファイルから .claude/skills/*/SKILL.md だけ拾う
+mapfile -t staged < <(
+  git diff --cached --name-only --diff-filter=ACMR -z |
+    tr '\0' '\n' |
+    grep -E '^\.claude/skills/[^/]+/SKILL\.md$' || true
+)
+
+if [[ ${#staged[@]} -eq 0 ]]; then
+  exit 0
+fi
+
+if ! command -v python3 >/dev/null 2>&1; then
+  echo "pre-commit: python3 が PATH にありません。SKILL.md frontmatter を検証できません。" >&2
+  echo "pre-commit: スキップする場合: SKILL_YAML_PRE_COMMIT_SKIP=1 git commit" >&2
+  if [[ "${SKILL_YAML_PRE_COMMIT_FAIL_OPEN:-}" == "1" ]]; then
+    exit 0
+  fi
+  exit 1
+fi
+
+if ! python3 -c "import yaml" 2>/dev/null; then
+  echo "pre-commit: python3 の yaml モジュールがありません。pip install pyyaml で入れてください。" >&2
+  echo "pre-commit: スキップする場合: SKILL_YAML_PRE_COMMIT_SKIP=1 git commit" >&2
+  if [[ "${SKILL_YAML_PRE_COMMIT_FAIL_OPEN:-}" == "1" ]]; then
+    exit 0
+  fi
+  exit 1
+fi
+
+# ステージされた SKILL.md の内容を `git show :path` で取り出して検証する
+# （ワーキングツリーではなくインデックスを見るのが pre-commit の正しい挙動）
+read -r -d '' PY_SCRIPT <<'PY' || true
+import subprocess
+import sys
+
+import yaml
+
+
+def parse_one(path):
+    try:
+        text = subprocess.check_output(
+            ["git", "show", f":{path}"],
+            text=True,
+        )
+    except subprocess.CalledProcessError as exc:
+        return f"{path}: failed to read staged content: {exc}"
+
+    if not text.startswith("---"):
+        return None
+
+    parts = text.split("---", 2)
+    if len(parts) < 3:
+        return None
+
+    fm = parts[1]
+    try:
+        yaml.safe_load(fm)
+    except yaml.YAMLError as e:
+        first = str(e).splitlines()[0]
+        return f"{path}: {first}"
+    return None
+
+
+errors = []
+for path in sys.argv[1:]:
+    msg = parse_one(path)
+    if msg:
+        errors.append(msg)
+
+for err in errors:
+    print(err)
+sys.exit(1 if errors else 0)
+PY
+
+set +e
+output=$(python3 -c "$PY_SCRIPT" "${staged[@]}")
+status=$?
+set -e
+
+if [[ $status -eq 0 ]]; then
+  exit 0
+fi
+
+if [[ $status -eq 1 ]]; then
+  echo "pre-commit: SKILL.md frontmatter YAML validation failed" >&2
+  while IFS= read -r line; do
+    [[ -z "$line" ]] && continue
+    echo "  $line" >&2
+  done <<<"$output"
+  cat <<'EOF' >&2
+
+description に `Triggers: "..."` のような ': '（コロン+スペース）を plain scalar で書くと
+YAML が新しい mapping key と誤解釈します。block scalar `>` 形式に書き換えてください:
+
+  description: >
+    Use when ... Triggers: "...".
+
+スキップする場合: SKILL_YAML_PRE_COMMIT_SKIP=1 git commit
+EOF
+  exit 1
+fi
+
+echo "pre-commit: SKILL.md YAML validator が異常終了しました（終了コード ${status}）。" >&2
+echo "$output" >&2
+if [[ "${SKILL_YAML_PRE_COMMIT_FAIL_OPEN:-}" == "1" ]]; then
+  echo "pre-commit: SKILL_YAML_PRE_COMMIT_FAIL_OPEN=1 により commit を許可します。" >&2
+  exit 0
+fi
+exit 1

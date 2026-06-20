@@ -39,6 +39,48 @@ brew install gitleaks  # macOS
 
 カスタムルール・誤検知除外はリポジトリ直下に `.gitleaks.toml` を置いて対応する。
 
+## pre-commit フック（SKILL.md YAML 検証）
+
+`git commit` 前にステージされた `.claude/skills/*/SKILL.md` の frontmatter を `python3` + `pyyaml` でパースし、YAML エラーがあればブロックする。GitHub 上で SKILL.md を表示したときの frontmatter エラーを未然に防ぐ。
+
+**前提条件**: `python3` と `pyyaml` モジュール
+
+```bash
+pip3 install pyyaml
+```
+
+**制御用環境変数**:
+
+| 変数 | 効果 |
+|------|------|
+| `SKILL_YAML_PRE_COMMIT_SKIP=1` | 検証をスキップ |
+| `SKILL_YAML_PRE_COMMIT_FAIL_OPEN=1` | パーサ異常終了時でも commit を許可 |
+
+### SKILL.md frontmatter の書き方
+
+`description:` が長文で、値の中に **`: `（コロン+スペース）** を含む場合は **block scalar `>` 形式** を使う。plain scalar（クォートなし）のままだと、YAML パーサが `Triggers: "..."` のような部分を新しい mapping key と誤解釈する。
+
+**NG（plain scalar に `: ` が混じる）**:
+
+```yaml
+---
+name: example-skill
+description: Use when reviewing a diff. Triggers: "diff をレビュー", "review".
+---
+```
+
+**OK（block scalar `>` 形式）**:
+
+```yaml
+---
+name: example-skill
+description: >
+  Use when reviewing a diff. Triggers: "diff をレビュー", "review".
+---
+```
+
+短い description で `: ` を含まない場合は plain scalar のままで問題ない。pre-commit hook が自動でブロックするので、迷ったら commit してみれば検出される。
+
 ## テンプレート構成
 
 | パス | 役割 |
