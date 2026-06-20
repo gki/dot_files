@@ -1,6 +1,10 @@
 ---
 name: memory-triage
-description: Use when MEMORY.md has grown large, memories feel stale, or the user asks to clean up / reorganize / triage memory entries. Triggers: "memory を整理", "memory をクリーンアップ", "memory の棚卸し", "memory が多い", "不要なmemoryを削除", "memory を最新化".
+description: >
+  Use when MEMORY.md has grown large, memories feel stale, or the user asks to
+  clean up / reorganize / triage memory entries. Triggers: "memory を整理",
+  "memory をクリーンアップ", "memory の棚卸し", "memory が多い",
+  "不要なmemoryを削除", "memory を最新化".
 ---
 
 # Memory Triage
